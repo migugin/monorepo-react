@@ -91,11 +91,11 @@ function App() {
       <div className="chat-container">
         <div id="chat-log" ref={chatLogRef}>
           {messages.map((msg) => (
-            <div key={msg.id} className="chat-box">
+            <div key={msg.id} className={`chat-box ${msg.sender}`}>
               <div className="icon" id={msg.sender === "user" ? "user-icon" : "bot-icon"}>
                 <i className={msg.sender === "user" ? "fa-regular fa-user" : "fa-solid fa-robot"}></i>
               </div>
-              <div className={msg.sender}>
+              <div className={`${msg.sender}-box`}>
                 <p dangerouslySetInnerHTML={{ __html: marked.parse(msg.message) }} />
               </div>
             </div>

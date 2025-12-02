@@ -97,8 +97,15 @@ body {
 
 .chat-box {
   display: flex;
-  align-items: center;
   padding: 10px 15px;
+
+  &.user {
+    align-items: flex-start;
+  }
+
+  &.bot {
+    align-items: flex-start;
+  }
 }
 
 #chat-log {
@@ -113,8 +120,8 @@ body {
   border-radius: 5px;
 }
 
-.bot,
-.user {
+.bot-box,
+.user-box {
   display: flex;
   align-items: flex-start;
   color: #eee;
@@ -122,11 +129,11 @@ body {
   border-radius: 6px;
 }
 
-.user {
+.user-box {
   padding-left: 8px;
 }
 
-.bot {
+.bot-box {
   background-color: #444654;
   padding: 20px 24px;
 
