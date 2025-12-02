@@ -4,12 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  vite: npm:rolldown-vite@7.2.8
-
 importers:
 
-  .:
+  .: {}
+
+  apps/gyupt:
     dependencies:
       marked:
         specifier: ^17.0.1
