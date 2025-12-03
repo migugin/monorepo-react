@@ -1,0 +1,24 @@
+{
+  "name": "gyupt",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "pnpm --filter . exec eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "marked": "^17.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "sass": "^1.94.2",
+    "vite": "npm:rolldown-vite@7.2.8"
+  }
+}
