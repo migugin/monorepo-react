@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev:gyupt": "pnpm --filter gyupt dev",
+    "dev:movie-app": "pnpm --filter movie-app dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r exec eslint ."
   },

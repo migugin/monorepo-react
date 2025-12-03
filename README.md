@@ -18,7 +18,7 @@ mkdir -p apps/admin
 
 ## 2. React(Vite) 프로젝트 초기화
 ```bash
-pnpm create vite . --template react-ts
+pnpm create vite@latest
 ```
 
 또는 필요한 템플릿을 선택.
