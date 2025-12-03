@@ -85,6 +85,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.1.1
         version: 5.1.1(rolldown-vite@7.2.8(sass@1.94.2))
+      sass:
+        specifier: ^1.94.2
+        version: 1.94.2
       vite:
         specifier: npm:rolldown-vite@7.2.8
         version: rolldown-vite@7.2.8(sass@1.94.2)
