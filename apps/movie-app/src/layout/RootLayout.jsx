@@ -4,15 +4,15 @@ import Footer from "./Footer";
 
 function RootLayout() {
   return (
-    <div>
+    <>
       <Nav />
 
       <main>
         <Outlet />
       </main>
-      
+
       <Footer />
-    </div>
+    </>
   );
 }
 
