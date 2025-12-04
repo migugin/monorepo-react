@@ -1,4 +1,4 @@
-import "@/style/layout/nav.scss";
+import "@/style/layout/Nav.scss";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 

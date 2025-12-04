@@ -1,7 +1,9 @@
+import Banner from "@/components/Banner";
+
 function MainPage() {
   return (
     <>
-      Main
+      <Banner />
     </>
   );
 }
