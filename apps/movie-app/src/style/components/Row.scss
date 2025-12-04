@@ -1,5 +1,6 @@
 .row {
-  margin-left: 20px;
+  margin-left: 10px;
+  margin-right: 10px;
   color: white;
 
   &__title {
@@ -20,7 +21,7 @@
   box-sizing: border-box;
   transition: 400ms all ease-in-out;
   cursor: pointer;
-  width: 80px;
+  width: 70px;
   z-index: 1000;
   position: absolute;
   left: 0;
@@ -37,7 +38,7 @@
   box-sizing: border-box;
   transition: 400ms all ease-in-out;
   cursor: pointer;
-  width: 80px;
+  width: 70px;
   z-index: 1000;
   position: absolute;
   right: 0;
