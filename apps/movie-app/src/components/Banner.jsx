@@ -12,7 +12,7 @@ function Banner() {
 
       const movieId = request.data.results[Math.floor(Math.random() * request.data.results.length)].id;
 
-      const { data: movieDetail } = await axios.get(`movie/${movieId}`, {
+      const { data: movieDetail } = await axios.get(`/movie/${movieId}`, {
         params: { append_to_response: "videos" },
       });
 
@@ -21,6 +21,10 @@ function Banner() {
 
     fetchData();
   }, []);
+
+  const truncate = (str, n = 100) => {
+    return str?.length > n ? str.substr(0, n - 1) + "..." : str;
+  };
 
   return (
     <header
@@ -34,13 +38,13 @@ function Banner() {
       }}
     >
       <div className="banner__contents">
-        <h1>{movie.title || movie.name || movie.original_name}</h1>
+        <h1 className="banner__title">{movie?.title || movie?.name || movie?.original_name}</h1>
         <div className="banner__buttons">
           <button className="banner__button play">Play</button>
           <button className="banner__button info">More Information</button>
         </div>
 
-        <h1 className="banner__description">{movie.overview}</h1>
+        <h1 className="banner__description">{truncate(movie?.overview)}</h1>
       </div>
       <div className="banner__fadeBottom"></div>
     </header>
