@@ -5,6 +5,9 @@
   "scripts": {
     "dev:gyupt": "pnpm --filter gyupt dev",
     "dev:movie-app": "pnpm --filter movie-app dev",
+    "dev:lunch": "pnpm --filter lunch dev",
+    "dev:lunch:all": "pnpm --filter lunch dev:all",
+    "dev:lunch:proxy": "pnpm --filter lunch dev:proxy",
     "build": "pnpm -r build",
     "lint": "pnpm -r exec eslint ."
   },
@@ -19,6 +22,10 @@
   "pnpm": {
     "overrides": {
       "vite": "npm:rolldown-vite@7.2.8"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "@swc/core",
+      "esbuild"
+    ]
   }
 }
