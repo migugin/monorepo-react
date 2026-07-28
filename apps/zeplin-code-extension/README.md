@@ -26,6 +26,11 @@ scripts/
 test/
   inferLayout.test.js        # 레이아웃 추론/태그 매핑/HTML 빌드/Vue SFC 스니펫 테스트
   fixtures/                  # 샘플 레이어 트리 (카드, 그리드)
+preview/                    # Vite + Vue 3 미리보기 앱 (이 패키지 안에서만 사용, zem 빌드와 무관)
+  main.js
+  App.vue                   # data/generated.vue를 동적으로 불러와 실제로 렌더링해서 보여줌
+index.html                  # Vite 엔트리 HTML
+vite.config.js              # Vite + @vitejs/plugin-vue 설정
 ```
 
 ## 왜 이렇게 했는지
@@ -63,6 +68,11 @@ pnpm --filter zeplin-code-extension test
 # Zeplin 코드 패널에 표시되는 것과 동일한 buildVueSfc()를 사용해 data/generated.vue를 만든다.
 pnpm --filter zeplin-code-extension generate:fixture
 pnpm --filter zeplin-code-extension generate:fixture test/fixtures/sample-grid.json
+
+# 위에서 생성한 data/generated.vue를 브라우저에서 실제 Vue 컴포넌트로 렌더링해서 확인
+# (이 프로젝트 안에서만 쓰는 Vite + Vue 3 환경. zem 빌드에는 영향 없음)
+pnpm --filter zeplin-code-extension dev
+# → http://localhost:5173 접속. generate:fixture를 다시 실행한 뒤에는 브라우저를 새로고침한다.
 
 # (선택) 실제 Zeplin 화면 데이터 가져오기 - .env 설정 필요 (.env.example 참고)
 pnpm --filter zeplin-code-extension fetch:screen

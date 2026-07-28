@@ -13,18 +13,26 @@
     "publish:ext": "zem publish",
     "test": "node --test \"test/**/*.test.js\"",
     "fetch:screen": "node --env-file-if-exists=.env scripts/fetch-screen.js",
-    "generate:fixture": "node scripts/generate-from-fixture.js"
+    "generate:fixture": "node scripts/generate-from-fixture.js",
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "zeplin": {
     "displayName": "Layout Inference (Vue SFC)",
-    "platforms": ["web"]
+    "platforms": [
+      "web"
+    ]
   },
   "dependencies": {
+    "vue": "^3.5.40",
     "zeplin-extension-style-kit": "^5.1.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
     "babel-loader": "^10.0.0",
     "core-js": "^3.41.0",
+    "sass": "^1.94.2",
+    "vite": "npm:rolldown-vite@7.2.8",
     "zem": "^2.0.7"
   }
 }
