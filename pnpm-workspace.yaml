@@ -1,3 +1,9 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+allowBuilds:
+  '@parcel/watcher': set this to true or false
+
+overrides:
+  vite: npm:rolldown-vite@7.2.8
