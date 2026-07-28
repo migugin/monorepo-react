@@ -1,6 +1,6 @@
 {
   "name": "zeplin-code-extension",
-  "description": "Zeplin 레이어를 좌표 기반으로 분석해 HTML/CSS(또는 Vue 컴포넌트)를 생성하는 실험용 Zeplin Extension",
+  "description": "Zeplin 레이어를 좌표 기반으로 분석해 Vue 3 SFC(<template> + <style scoped lang=\"scss\">)를 생성하는 실험용 Zeplin Extension",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
     "generate:fixture": "node scripts/generate-from-fixture.js"
   },
   "zeplin": {
-    "displayName": "Layout Inference (HTML/CSS)",
+    "displayName": "Layout Inference (Vue SFC)",
     "platforms": ["web"]
   },
   "dependencies": {

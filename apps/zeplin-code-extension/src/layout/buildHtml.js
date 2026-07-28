@@ -3,9 +3,15 @@ import { mapSemanticTag, toClassName } from "./mapSemanticTag.js";
 import { extractVisualStyles, extractTextStyles, stylesToCssRule } from "./buildCss.js";
 
 const SELF_CLOSING_TAGS = new Set(["img", "input"]);
+const INDENT_UNIT = "  ";
 
 function isTextLayer(layer) {
   return layer.type === "text";
+}
+
+// 결과물이 Vue의 <template> 블록 안에 그대로 중첩되므로, 레이어 깊이에 맞춰 들여쓰기를 붙여둔다
+function indentLine(line, depth) {
+  return `${INDENT_UNIT.repeat(depth)}${line}`;
 }
 
 // HTML 텍스트 콘텐츠에 들어갈 값에서 태그 주입을 방지한다
@@ -65,7 +71,7 @@ function toCssStyles(layoutResult) {
 }
 
 /**
- * 자식 레이어 목록을 순서대로 HTML 문자열로 변환한다.
+ * 자식 레이어 목록을 순서대로, 부모보다 한 단계 깊은 들여쓰기가 적용된 HTML 문자열로 변환한다.
  * layoutResult.fallback이 "absolute-children"이면, 세 가지 레이아웃 패턴(flex-row/column/grid)에
  * 모두 해당하지 않아 부모가 이미 position:relative로 전환된 상태이므로, 각 자식에게 부모 기준
  * 상대좌표를 position:absolute + left/top으로 부여해 원본 좌표를 그대로 재현한다.
@@ -74,29 +80,33 @@ function toCssStyles(layoutResult) {
  * @param {object} layoutResult - 부모에 대해 inferLayout()이 반환한 레이아웃 정보
  * @param {Map<string, number>} usedClassNameCounts - 클래스명 중복 방지용 카운터
  * @param {Array<string>} cssRules - CSS 규칙이 누적되는 배열
+ * @param {number} depth - 자식들에게 적용할 들여쓰기 깊이
  * @returns {string} 자식 레이어들의 HTML을 이어붙인 문자열
  */
-function buildChildrenHtml(parentLayer, childLayers, layoutResult, usedClassNameCounts, cssRules) {
+function buildChildrenHtml(parentLayer, childLayers, layoutResult, usedClassNameCounts, cssRules, depth) {
   const needsAbsolutePosition = layoutResult.fallback === "absolute-children";
 
   return childLayers
     .map((child) => {
       const absolutePosition = needsAbsolutePosition ? toRelativeRect(child.rect, parentLayer.rect) : undefined;
-      return walkLayer(child, usedClassNameCounts, cssRules, absolutePosition);
+      return walkLayer(child, usedClassNameCounts, cssRules, absolutePosition, depth);
     })
     .join("\n");
 }
 
 /**
- * 레이어 하나를 HTML 엘리먼트 문자열로 변환하고, 해당 레이어의 CSS 규칙을 cssRules에 누적한다.
+ * 레이어 하나를 들여쓰기가 적용된 HTML 엘리먼트 문자열로 변환하고, 해당 레이어의 CSS 규칙을 cssRules에 누적한다.
  * 자식이 2개 이상이면 좌표를 분석해 flex/grid 레이아웃을 함께 추론한다.
+ * 결과물은 Vue의 <template> 블록에 그대로 들어가므로, 자식이 있으면 여는/닫는 태그를 별도 줄로 분리하고
+ * 그 사이의 자식들을 한 단계 들여써서 가독성을 높인다.
  * @param {object} layer - Zeplin 레이어 객체 (rect, type, fills, layers 등 포함)
  * @param {Map<string, number>} usedClassNameCounts - 클래스명 중복 방지용 카운터
  * @param {Array<string>} cssRules - CSS 규칙이 누적되는 배열
  * @param {{x:number,y:number}} [absolutePosition] - 부모가 absolute 폴백일 때 부여할 상대좌표
+ * @param {number} [depth=0] - 현재 레이어의 들여쓰기 깊이
  * @returns {string} 해당 레이어의 HTML 문자열
  */
-function walkLayer(layer, usedClassNameCounts, cssRules, absolutePosition) {
+function walkLayer(layer, usedClassNameCounts, cssRules, absolutePosition, depth = 0) {
   const tag = mapSemanticTag(layer);
   const className = toUniqueClassName(layer.name, usedClassNameCounts);
   const childLayers = layer.layers ?? [];
@@ -122,14 +132,23 @@ function walkLayer(layer, usedClassNameCounts, cssRules, absolutePosition) {
   if (cssRule) cssRules.push(cssRule);
 
   if (SELF_CLOSING_TAGS.has(tag)) {
-    return `<${tag} class="${className}" ${buildSelfClosingAttributes(tag, layer)} />`;
+    return indentLine(`<${tag} class="${className}" ${buildSelfClosingAttributes(tag, layer)} />`, depth);
   }
 
-  const innerHtml = isTextLayer(layer)
-    ? escapeHtml(layer.content ?? layer.name)
-    : buildChildrenHtml(layer, childLayers, layoutResult, usedClassNameCounts, cssRules);
+  if (isTextLayer(layer)) {
+    const content = escapeHtml(layer.content ?? layer.name);
+    return indentLine(`<${tag} class="${className}">${content}</${tag}>`, depth);
+  }
 
-  return `<${tag} class="${className}">${innerHtml}</${tag}>`;
+  if (childLayers.length === 0) {
+    return indentLine(`<${tag} class="${className}"></${tag}>`, depth);
+  }
+
+  const childrenHtml = buildChildrenHtml(layer, childLayers, layoutResult, usedClassNameCounts, cssRules, depth + 1);
+  const openTag = indentLine(`<${tag} class="${className}">`, depth);
+  const closeTag = indentLine(`</${tag}>`, depth);
+
+  return [openTag, childrenHtml, closeTag].join("\n");
 }
 
 /**

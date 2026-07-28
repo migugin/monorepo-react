@@ -1,28 +1,30 @@
 # zeplin-code-extension
 
-Zeplin 레이어를 **좌표(x, y, width, height) 분석만으로** HTML/CSS로 변환하는 실험용 [Zeplin Extension](https://zeplin.github.io/extension-model/)입니다.
+Zeplin 레이어를 **좌표(x, y, width, height) 분석만으로** Vue 3 싱글 파일 컴포넌트(`<template>` + `<style scoped lang="scss">`)로 변환하는 실험용 [Zeplin Extension](https://zeplin.github.io/extension-model/)입니다.
 챌린지 쇼케이스 발표(뭘 했는지 / 왜 이렇게 했는지 / 막혔던 부분과 해결)를 위한 사이드 프로젝트입니다.
 
 ## 뭘 했는지
 
 - Zeplin 레이어 트리(JSON)를 입력받아, 형제 레이어들의 좌표를 분석해 `flex-row` / `flex-column` / `grid` / (폴백) `absolute` 배치를 추론
 - 레이어 이름 컨벤션(`btn-`, `img-`, `text-` 등)을 기반으로 `<div>` 대신 시맨틱 HTML 태그(`button`, `img`, `p`...)로 매핑
-- 색상(`fills`), 폰트(`textStyles`), 테두리 반경 등을 CSS로 추출
+- 색상(`fills`), 폰트(`textStyles`), 테두리 반경 등을 CSS(SCSS와 호환되는 문법)로 추출
+- 최종 결과물을 `<template>` + `<style scoped lang="scss">` 형태의 Vue 3 SFC 스니펫으로 감싸서 Zeplin 코드 패널에 표시
 - Zeplin 앱 없이도 개발/데모할 수 있도록 fixture 기반 테스트 + REST API 연동 스크립트 분리
 
 ```
 src/
-  index.js                 # Zeplin Extension 진입점 (layer, screen 함수)
+  index.js                 # Zeplin Extension 진입점 (layer, screen 함수, Vue SFC 스니펫 조립)
   layout/
     inferLayout.js          # 좌표 기반 flex/grid 추론 알고리즘 (핵심 로직)
     mapSemanticTag.js       # 레이어 이름 → HTML 태그 매핑
-    buildCss.js             # 색상/폰트/테두리 → CSS 변환
-    buildHtml.js            # 레이어 트리 순회 → HTML/CSS 조립
+    buildCss.js             # 색상/폰트/테두리 → CSS(SCSS 호환) 변환
+    buildHtml.js            # 레이어 트리 순회 → 들여쓰기된 HTML/CSS 조립
+    buildVueSfc.js          # HTML/CSS → <template> + <style scoped lang="scss"> 조립
 scripts/
   fetch-screen.js           # Zeplin REST API로 실제 화면 데이터를 가져와 data/ 에 저장
-  generate-from-fixture.js  # JSON(fixture 또는 실제 데이터) → 미리보기 HTML 생성
+  generate-from-fixture.js  # JSON(fixture 또는 실제 데이터) → 미리보기 .vue 파일 생성
 test/
-  inferLayout.test.js        # 레이아웃 추론/태그 매핑/HTML 빌드 테스트
+  inferLayout.test.js        # 레이아웃 추론/태그 매핑/HTML 빌드/Vue SFC 스니펫 테스트
   fixtures/                  # 샘플 레이어 트리 (카드, 그리드)
 ```
 
@@ -57,7 +59,8 @@ pnpm install
 # 알고리즘 단위 테스트
 pnpm --filter zeplin-code-extension test
 
-# fixture를 HTML로 변환해서 미리보기 (Zeplin 앱/계정 불필요)
+# fixture를 Vue 3 SFC(.vue)로 변환해서 미리보기 생성 (Zeplin 앱/계정 불필요)
+# Zeplin 코드 패널에 표시되는 것과 동일한 buildVueSfc()를 사용해 data/generated.vue를 만든다.
 pnpm --filter zeplin-code-extension generate:fixture
 pnpm --filter zeplin-code-extension generate:fixture test/fixtures/sample-grid.json
 

@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { inferLayout, groupByProximity } from "../src/layout/inferLayout.js";
 import { mapSemanticTag, toClassName } from "../src/layout/mapSemanticTag.js";
 import { buildComponent } from "../src/layout/buildHtml.js";
+import { buildVueSfc } from "../src/layout/buildVueSfc.js";
+import zeplinExtension from "../src/index.js";
 
 function loadFixture(fileName) {
   const filePath = new URL(`./fixtures/${fileName}`, import.meta.url);
@@ -160,4 +162,41 @@ test("자식 레이어가 겹쳐서 간격이 음수가 되면 gap은 0으로 �
   assert.equal(layout.display, "flex");
   assert.equal(layout.flexDirection, "row");
   assert.equal(layout.gap, 0);
+});
+
+test("buildVueSfc는 HTML/CSS를 <template> + <style scoped lang=\"scss\">로 감싸고 각 블록을 한 단계 들여쓴다", () => {
+  const sfc = buildVueSfc('<div class="foo"></div>', '.foo {\n  width: 10px;\n}');
+
+  assert.equal(
+    sfc,
+    ['<template>', '  <div class="foo"></div>', "</template>", "", '<style scoped lang="scss">', "  .foo {", "    width: 10px;", "  }", "</style>"].join(
+      "\n"
+    )
+  );
+});
+
+test("layer()는 Vue 3 SFC(<template> + <style scoped lang=\"scss\">) 형태의 코드 스니펫을 반환한다", () => {
+  const card = loadFixture("sample-card.json");
+
+  const { code, language } = zeplinExtension.layer({}, card);
+
+  assert.equal(language, "vue");
+  assert.match(code, /^<template>\n/);
+  assert.match(code, /\n<\/template>\n\n<style scoped lang="scss">\n/);
+  assert.match(code, /<\/style>\n?$/);
+  // template 안쪽 마크업과 style 안쪽 CSS 선언은 모두 들여써져 있어야 한다
+  assert.match(code, /\n {2}<div class="card-product">\n/);
+  assert.match(code, /\n {4}<img class="img-thumbnail"/);
+  assert.match(code, /\n {2}\.card-product \{\n/);
+});
+
+test("screen()도 화면의 최상위 레이어들을 감싸 동일한 Vue SFC 스니펫을 생성한다", () => {
+  const card = loadFixture("sample-card.json");
+  const selectedScreen = { name: "product-screen", layers: card.layers };
+
+  const { code, language } = zeplinExtension.screen({}, selectedScreen);
+
+  assert.equal(language, "vue");
+  assert.match(code, /^<template>\n/);
+  assert.match(code, /<style scoped lang="scss">/);
 });
