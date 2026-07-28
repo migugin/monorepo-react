@@ -10,14 +10,20 @@ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { buildComponent, buildRootFromLayers } from "../src/layout/buildHtml.js";
 import { buildVueSfc } from "../src/layout/buildVueSfc.js";
+import { normalizeLayer, buildAssetIndexBySourceId } from "../src/layout/normalizeLayer.js";
 
 const DEFAULT_FIXTURE_PATH = resolve(import.meta.dirname, "../test/fixtures/sample-card.json");
 
-// fixture 파일은 layer 객체(rect 있음)이거나, Zeplin API의 screen version 응답(최상위에 rect 없음)일 수 있다
+// fixture 파일은 layer 객체(rect 있음)이거나, Zeplin API의 screen version 응답(최상위에 rect 없음)일 수 있다.
+// 두 경우 모두 normalizeLayer()를 거쳐야 실제 Zeplin 데이터(snake_case 필드, 부모 기준 상대좌표,
+// 최상위 assets 배열 등)와 fixture(이미 평탄화된 camelCase, 하위 호환) 양쪽 모두 올바르게 처리된다.
 function toRootLayer(rawData) {
   const isSingleLayer = Boolean(rawData.rect);
-  if (isSingleLayer) return rawData;
-  return buildRootFromLayers(rawData.layers ?? [], rawData.name ?? "screen");
+  if (isSingleLayer) return normalizeLayer(rawData);
+
+  const assetIndexBySourceId = buildAssetIndexBySourceId(rawData.assets);
+  const normalizedLayers = (rawData.layers ?? []).map((child) => normalizeLayer(child, { assetIndexBySourceId }));
+  return buildRootFromLayers(normalizedLayers, rawData.name ?? "screen");
 }
 
 function main() {

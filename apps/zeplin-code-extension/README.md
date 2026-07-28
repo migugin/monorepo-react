@@ -15,6 +15,7 @@ Zeplin 레이어를 **좌표(x, y, width, height) 분석만으로** Vue 3 싱글
 src/
   index.js                 # Zeplin Extension 진입점 (layer, screen 함수, Vue SFC 스니펫 조립)
   layout/
+    normalizeLayer.js       # 원본 Zeplin 데이터(snake_case, 부모 기준 상대좌표 등) → 내부 표준 형태 변환
     inferLayout.js          # 좌표 기반 flex/grid 추론 알고리즘 (핵심 로직)
     mapSemanticTag.js       # 레이어 이름 → HTML 태그 매핑
     buildCss.js             # 색상/폰트/테두리 → CSS(SCSS 호환) 변환
@@ -25,6 +26,7 @@ scripts/
   generate-from-fixture.js  # JSON(fixture 또는 실제 데이터) → 미리보기 .vue 파일 생성
 test/
   inferLayout.test.js        # 레이아웃 추론/태그 매핑/HTML 빌드/Vue SFC 스니펫 테스트
+  normalizeLayer.test.js     # 원본 Zeplin 데이터 정규화(좌표/필드명/이미지 asset) 테스트
   fixtures/                  # 샘플 레이어 트리 (카드, 그리드)
 preview/                    # Vite + Vue 3 미리보기 앱 (이 패키지 안에서만 사용, zem 빌드와 무관)
   main.js
@@ -54,6 +56,12 @@ vite.config.js              # Vite + @vitejs/plugin-vue 설정
 4. **막힘: `zem build`(webpack 기반)가 pnpm 환경에서 `babel-loader`/`core-js`를 못 찾음**
    zem은 내부적으로 webpack + babel-loader + core-js(폴리필)를 사용하는데, 이들은 어디까지나 **zem 자신의 의존성**입니다. npm/yarn의 flat `node_modules`라면 우연히 최상위로 hoist되어 문제가 없었겠지만, pnpm은 기본적으로 "선언하지 않은 패키지는 보이지 않는" strict `node_modules` 구조라 webpack이 프로젝트 루트 기준으로 이 모듈들을 resolve하지 못해 빌드가 실패했습니다.
    → **해결**: `babel-loader`, `core-js`를 우리 패키지의 `devDependencies`에 직접 선언해서 pnpm이 해당 패키지의 `node_modules`에도 설치하도록 했습니다. npm 기준으로 작성된 CLI 도구를 pnpm 모노레포에 붙일 때 흔히 겪는 "phantom dependency" 문제의 실제 사례입니다.
+5. **막힘: `generate:fixture`로 실제 화면을 뽑아보면 제플린 디자인과 완전히 다르게(레이아웃이 밀리고, 폰트/테두리 반경이 안 먹고, 이미지가 빈 박스로) 나옴**
+   `fetch-screen.js`로 받은 실제 Zeplin REST API 응답을 직접 까본 결과, 이 프로젝트가 처음부터 가정하고 있던 레이어 스키마가 [공식 문서](https://docs.zeplin.dev/reference/layer)와 달랐다는 걸 확인했습니다.
+   - `rect.x`/`rect.y`는 화면 절대좌표가 아니라 **바로 위 부모 레이어 기준 상대좌표**다 (화면 절대좌표는 `rect.absolute`로 따로 내려옴). 194개 레이어 전체를 루트부터 좌표를 누적해 `rect.absolute`와 비교했더니 오차 0으로 일치해 확인했습니다. 기존 알고리즘은 모든 rect가 이미 절대좌표라고 가정하고 부모 rect를 한 번 더 빼는 "이중 상대화"를 하고 있었습니다.
+   - 필드명이 `borderRadius`/`textStyles`가 아니라 `border_radius`/`text_styles`(snake_case)였고, `text_styles[].style.font_family`, `border.fill.color`처럼 한 단계 더 감싸져 있었습니다.
+   - 이미지 레이어 자신은 이미지 정보를 전혀 담고 있지 않고(`fills: []`, `layers: []`), 화면 응답 최상위의 `assets` 배열에 `layer_source_id`로 연결되어 별도로 내려옵니다.
+   → **해결**: 원본 데이터를 내부 알고리즘이 기대하는 형태로 변환하는 어댑터(`src/layout/normalizeLayer.js`)를 추가해, `index.js`(Extension 진입점)와 `generate-from-fixture.js` 양쪽 모두 원본 데이터를 받으면 먼저 정규화하도록 했습니다. `inferLayout.js`/`buildHtml.js`/`buildCss.js` 등 핵심 로직과 기존 fixture 기반 테스트는 전혀 건드리지 않고, 입력 단계에서만 흡수하도록 설계했습니다.
 
 ## 실행 방법
 
