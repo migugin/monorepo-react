@@ -1,0 +1,50 @@
+{
+  "name": "card-product",
+  "type": "group",
+  "rect": { "x": 0, "y": 0, "width": 300, "height": 296 },
+  "layers": [
+    {
+      "name": "img-thumbnail",
+      "type": "shape",
+      "rect": { "x": 0, "y": 0, "width": 300, "height": 180 },
+      "fills": [{ "type": "color", "color": { "r": 220, "g": 220, "b": 220, "a": 1 } }]
+    },
+    {
+      "name": "text-title",
+      "type": "text",
+      "content": "무선 이어폰 Pro",
+      "rect": { "x": 16, "y": 196, "width": 268, "height": 28 },
+      "textStyles": [
+        {
+          "fontFamily": "Pretendard",
+          "fontSize": 18,
+          "fontWeight": 600,
+          "lineHeight": 24,
+          "textAlign": "left",
+          "color": { "r": 34, "g": 34, "b": 34, "a": 1 }
+        }
+      ]
+    },
+    {
+      "name": "row-actions",
+      "type": "group",
+      "rect": { "x": 16, "y": 240, "width": 268, "height": 40 },
+      "layers": [
+        {
+          "name": "btn-buy",
+          "type": "component",
+          "rect": { "x": 16, "y": 240, "width": 126, "height": 40 },
+          "borderRadius": 8,
+          "fills": [{ "type": "color", "color": { "r": 29, "g": 99, "b": 255, "a": 1 } }]
+        },
+        {
+          "name": "btn-wishlist",
+          "type": "component",
+          "rect": { "x": 158, "y": 240, "width": 126, "height": 40 },
+          "borderRadius": 8,
+          "fills": [{ "type": "color", "color": { "r": 245, "g": 245, "b": 245, "a": 1 } }]
+        }
+      ]
+    }
+  ]
+}

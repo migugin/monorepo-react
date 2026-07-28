@@ -1,0 +1,30 @@
+{
+  "name": "zeplin-code-extension",
+  "description": "Zeplin 레이어를 좌표 기반으로 분석해 HTML/CSS(또는 Vue 컴포넌트)를 생성하는 실험용 Zeplin Extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "zem start",
+    "build": "zem build",
+    "clean": "zem clean",
+    "exec": "zem exec",
+    "publish:ext": "zem publish",
+    "test": "node --test \"test/**/*.test.js\"",
+    "fetch:screen": "node --env-file-if-exists=.env scripts/fetch-screen.js",
+    "generate:fixture": "node scripts/generate-from-fixture.js"
+  },
+  "zeplin": {
+    "displayName": "Layout Inference (HTML/CSS)",
+    "platforms": ["web"]
+  },
+  "dependencies": {
+    "zeplin-extension-style-kit": "^5.1.0"
+  },
+  "devDependencies": {
+    "babel-loader": "^10.0.0",
+    "core-js": "^3.41.0",
+    "zem": "^2.0.7"
+  }
+}

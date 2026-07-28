@@ -1,0 +1,13 @@
+{
+  "name": "list-products",
+  "type": "group",
+  "rect": { "x": 0, "y": 0, "width": 306, "height": 192 },
+  "layers": [
+    { "name": "item-product-1", "type": "component", "rect": { "x": 0, "y": 0, "width": 90, "height": 90 } },
+    { "name": "item-product-2", "type": "component", "rect": { "x": 102, "y": 0, "width": 90, "height": 90 } },
+    { "name": "item-product-3", "type": "component", "rect": { "x": 204, "y": 0, "width": 90, "height": 90 } },
+    { "name": "item-product-4", "type": "component", "rect": { "x": 0, "y": 102, "width": 90, "height": 90 } },
+    { "name": "item-product-5", "type": "component", "rect": { "x": 102, "y": 102, "width": 90, "height": 90 } },
+    { "name": "item-product-6", "type": "component", "rect": { "x": 204, "y": 102, "width": 90, "height": 90 } }
+  ]
+}
