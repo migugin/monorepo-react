@@ -1,0 +1,56 @@
+name: Deploy Zeplin Extension to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/zeplin-code-extension/**"
+      - ".github/workflows/deploy-zeplin-extension.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+
+      - name: Extension 빌드
+        run: pnpm --filter zeplin-code-extension build
+
+      - name: Pages 아티팩트 준비
+        run: |
+          mkdir -p dist-pages/zeplin-code-extension
+          cp -r apps/zeplin-code-extension/build/* dist-pages/zeplin-code-extension/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
