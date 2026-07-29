@@ -6,6 +6,11 @@
   "scripts": {
     "dev:gyupt": "pnpm --filter gyupt dev",
     "dev:movie-app": "pnpm --filter movie-app dev",
+    "dev:zeplin": "pnpm --filter zeplin-code-extension dev",
+    "test:zeplin": "pnpm --filter zeplin-code-extension test",
+    "generate:zeplin": "pnpm --filter zeplin-code-extension generate:fixture",
+    "fetch:zeplin": "pnpm --filter zeplin-code-extension fetch:screen",
+    "start:zeplin": "pnpm --filter zeplin-code-extension start",
     "build": "pnpm -r build",
     "lint": "pnpm -r exec eslint ."
   },
