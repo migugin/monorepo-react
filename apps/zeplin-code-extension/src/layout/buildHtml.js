@@ -9,12 +9,10 @@ function isTextLayer(layer) {
   return layer.type === "text";
 }
 
-// 결과물이 Vue의 <template> 블록 안에 그대로 중첩되므로, 레이어 깊이에 맞춰 들여쓰기를 붙여둔다
 function indentLine(line, depth) {
   return `${INDENT_UNIT.repeat(depth)}${line}`;
 }
 
-// HTML 텍스트 콘텐츠에 들어갈 값에서 태그 주입을 방지한다
 function escapeHtml(text) {
   return String(text)
     .replaceAll("&", "&amp;")
@@ -22,8 +20,6 @@ function escapeHtml(text) {
     .replaceAll(">", "&gt;");
 }
 
-// 큰따옴표로 감싼 HTML 속성값에 들어갈 값을 이스케이프한다.
-// escapeHtml만으로는 따옴표(", ')가 그대로 남아 속성 경계를 깨뜨릴 수 있어 별도로 처리한다.
 function escapeAttribute(text) {
   return escapeHtml(text)
     .replaceAll('"', "&quot;")
@@ -52,7 +48,6 @@ function buildSelfClosingAttributes(tag, layer) {
   return "";
 }
 
-// 같은 이름의 형제 레이어가 있어도 클래스명이 겹치지 않도록 카운터로 보정한다
 function toUniqueClassName(layerName, usedClassNameCounts) {
   const baseClassName = toClassName(layerName);
   const usedCount = usedClassNameCounts.get(baseClassName) ?? 0;
@@ -62,9 +57,6 @@ function toUniqueClassName(layerName, usedClassNameCounts) {
   return `${baseClassName}-${usedCount}`;
 }
 
-// inferLayout()의 반환값 중 "fallback"은 디버깅/설명용 메타데이터일 뿐 CSS 선언이 아니므로,
-// 실제 CSS로 변환하기 전에 반드시 제외해야 한다 (그대로 두면 `fallback: absolute-children;` 같은
-// 유효하지 않은 선언이 스타일시트에 그대로 출력된다).
 function toCssStyles(layoutResult) {
   const { fallback, ...cssStyles } = layoutResult;
   return cssStyles;
@@ -151,12 +143,6 @@ function walkLayer(layer, usedClassNameCounts, cssRules, absolutePosition, depth
   return [openTag, childrenHtml, closeTag].join("\n");
 }
 
-/**
- * Zeplin 레이어 트리(레이어 또는 화면의 최상위 layers)를 받아 HTML/CSS 코드 스니펫을 생성한다.
- * Extension의 layer/screen 함수에서 공통으로 사용하는 진입점이다.
- * @param {object} rootLayer - 변환을 시작할 최상위 레이어
- * @returns {{html: string, css: string}} 생성된 HTML과 CSS 문자열
- */
 export function buildComponent(rootLayer) {
   const usedClassNameCounts = new Map();
   const cssRules = [];

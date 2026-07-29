@@ -61,7 +61,7 @@ vite.config.js              # Vite + @vitejs/plugin-vue 설정
    - `rect.x`/`rect.y`는 화면 절대좌표가 아니라 **바로 위 부모 레이어 기준 상대좌표**다 (화면 절대좌표는 `rect.absolute`로 따로 내려옴). 194개 레이어 전체를 루트부터 좌표를 누적해 `rect.absolute`와 비교했더니 오차 0으로 일치해 확인했습니다. 기존 알고리즘은 모든 rect가 이미 절대좌표라고 가정하고 부모 rect를 한 번 더 빼는 "이중 상대화"를 하고 있었습니다.
    - 필드명이 `borderRadius`/`textStyles`가 아니라 `border_radius`/`text_styles`(snake_case)였고, `text_styles[].style.font_family`, `border.fill.color`처럼 한 단계 더 감싸져 있었습니다.
    - 이미지 레이어 자신은 이미지 정보를 전혀 담고 있지 않고(`fills: []`, `layers: []`), 화면 응답 최상위의 `assets` 배열에 `layer_source_id`로 연결되어 별도로 내려옵니다.
-   → **해결**: 원본 데이터를 내부 알고리즘이 기대하는 형태로 변환하는 어댑터(`src/layout/normalizeLayer.js`)를 추가해, `index.js`(Extension 진입점)와 `generate-from-fixture.js` 양쪽 모두 원본 데이터를 받으면 먼저 정규화하도록 했습니다. `inferLayout.js`/`buildHtml.js`/`buildCss.js` 등 핵심 로직과 기존 fixture 기반 테스트는 전혀 건드리지 않고, 입력 단계에서만 흡수하도록 설계했습니다.
+     → **해결**: 원본 데이터를 내부 알고리즘이 기대하는 형태로 변환하는 어댑터(`src/layout/normalizeLayer.js`)를 추가해, `index.js`(Extension 진입점)와 `generate-from-fixture.js` 양쪽 모두 원본 데이터를 받으면 먼저 정규화하도록 했습니다. `inferLayout.js`/`buildHtml.js`/`buildCss.js` 등 핵심 로직과 기존 fixture 기반 테스트는 전혀 건드리지 않고, 입력 단계에서만 흡수하도록 설계했습니다.
 
 ## 실행 방법
 
@@ -123,3 +123,4 @@ Zeplin 앱(Mac/Windows/Web)에서 `Option`(Mac) 또는 `Alt`(Windows) 키를 누
 - 컴포넌트 재사용성(같은 레이어가 여러 화면에 반복되는 경우)을 인식해 컴포넌트 단위로 묶는 기능은 없음
 - padding 추론(위 "막혔던 부분" 1번) 개선
 - `img` 태그의 `src`는 레이어에 `assets[0].url`이 있을 때만 채워진다. Zeplin 레이어 JSON은 이미지 바이너리를 직접 담지 않고 별도 asset export 응답으로 제공하는 경우가 많아, 해당 필드가 없는 데이터(예: 테스트 fixture)에서는 `src=""`로 남는다.
+- 레이어 하나만 선택해서 변환(`layer()`)할 때는 화면 전체의 `assets` 배열에 접근할 수 없다(Zeplin이 context로 넘겨주지 않음). 따라서 이미지 레이어의 `src`가 채워지지 않을 수 있으며, 이미지 URL까지 정확히 뽑으려면 화면 단위(`screen()`)로 변환해야 한다.

@@ -4,8 +4,12 @@ import { ref, onMounted } from "vue";
 const GeneratedComponent = ref(null);
 const loadErrorMessage = ref("");
 
-// data/generated.vue는 generate:fixture 스크립트가 실행될 때만 만들어지는(gitignore 대상) 파일이라
-// 정적 import 대신 glob으로 느슨하게 참조해, 파일이 없을 때도 개발 서버 자체는 죽지 않게 한다.
+/**
+ * data/generated.vue를 동적으로 불러와 렌더링 대상 컴포넌트로 설정한다.
+ * data/generated.vue는 generate:fixture 스크립트가 실행될 때만 만들어지는(gitignore 대상) 파일이라
+ * 정적 import 대신 glob으로 느슨하게 참조해, 파일이 없을 때도 개발 서버 자체는 죽지 않게 한다.
+ * @returns {Promise<void>}
+ */
 async function loadGeneratedComponent() {
   const modules = import.meta.glob("../data/generated.vue");
   const loadModule = modules["../data/generated.vue"];

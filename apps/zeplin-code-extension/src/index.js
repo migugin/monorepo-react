@@ -2,16 +2,19 @@ import { buildComponent, buildRootFromLayers } from "./layout/buildHtml.js";
 import { buildVueSfc } from "./layout/buildVueSfc.js";
 import { normalizeLayer, buildAssetIndexBySourceId } from "./layout/normalizeLayer.js";
 
-// 레이어를 선택했을 때 호출된다 (버튼, 카드 등 특정 레이어 단위 변환)
-// 단일 레이어 선택 시에는 화면 전체의 assets 목록에 접근할 수 없어(Zeplin이 context에 넘겨주지 않음),
-// 이미지 레이어의 src는 채워지지 않을 수 있다 (README "알려진 한계" 참고).
 function layer(context, selectedLayer) {
   const normalizedLayer = normalizeLayer(selectedLayer);
   const { html, css } = buildComponent(normalizedLayer);
   return { code: buildVueSfc(html, css), language: "vue" };
 }
 
-// 화면 전체를 변환할 때 호출된다
+/**
+ * 화면 전체를 변환할 때 호출된다. 화면 최상위 assets 배열로 이미지 URL 조회 테이블을 만든 뒤,
+ * 최상위 레이어들을 정규화해 하나의 루트 레이어로 묶어 HTML/CSS를 생성한다.
+ * @param {object} context - Zeplin이 전달하는 실행 컨텍스트
+ * @param {object} selectedScreen - 선택된 Zeplin 화면(screen) 객체
+ * @returns {{code: string, language: string}} Vue SFC 코드 스니펫
+ */
 function screen(context, selectedScreen) {
   const assetIndexBySourceId = buildAssetIndexBySourceId(selectedScreen.assets);
   const normalizedLayers = (selectedScreen.layers ?? []).map((child) =>

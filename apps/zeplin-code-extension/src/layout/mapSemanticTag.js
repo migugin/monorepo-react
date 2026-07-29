@@ -13,17 +13,10 @@ const NAME_PATTERN_RULES = [
   { pattern: /^text[-_]/i, tag: "p" }
 ];
 
-// 텍스트 레이어인지 여부는 name이 아니라 Zeplin layer.type으로 판단하는 편이 정확하다
 function isTextLayer(layer) {
   return layer.type === "text";
 }
 
-/**
- * 레이어 이름 컨벤션과 레이어 타입을 기반으로 적절한 HTML 시맨틱 태그를 결정한다.
- * 일치하는 네이밍 규칙이 없으면 div로 폴백한다.
- * @param {{name: string, type?: string}} layer - Zeplin 레이어 객체
- * @returns {string} 추론된 HTML 태그명
- */
 export function mapSemanticTag(layer) {
   const matchedRule = NAME_PATTERN_RULES.find((rule) => rule.pattern.test(layer.name));
   if (matchedRule) return matchedRule.tag;

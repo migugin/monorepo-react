@@ -1,6 +1,5 @@
 const DEFAULT_TOLERANCE = 2;
 
-// 좌표를 부모 레이어 기준 상대좌표로 변환한다
 function toRelativeRect(rect, parentRect) {
   return {
     x: rect.x - parentRect.x,
@@ -10,10 +9,15 @@ function toRelativeRect(rect, parentRect) {
   };
 }
 
-// 값들을 tolerance 범위 안에서 같은 그룹으로 묶는다 (정렬된 배열 기준).
-// 직전 값이 아니라 그룹의 첫 값(anchor)과 비교한다: 직전 값과만 비교하면 0→2→4→6처럼
-// 인접한 두 값끼리는 tolerance(2) 이내여도 그룹 전체 범위가 계속 누적되어 결국 tolerance를
-// 훨씬 벗어난 값들까지 같은 그룹으로 묶이는 "체이닝" 오류가 생긴다.
+/**
+ * 값들을 tolerance 범위 안에서 같은 그룹으로 묶는다 (정렬된 배열 기준).
+ * 직전 값이 아니라 그룹의 첫 값(anchor)과 비교한다: 직전 값과만 비교하면 0→2→4→6처럼
+ * 인접한 두 값끼리는 tolerance(2) 이내여도 그룹 전체 범위가 계속 누적되어 결국 tolerance를
+ * 훨씬 벗어난 값들까지 같은 그룹으로 묶이는 "체이닝" 오류가 생긴다.
+ * @param {Array<number>} sortedValues - 오름차순으로 정렬된 좌표값 배열
+ * @param {number} tolerance - 같은 그룹으로 볼 최대 오차 범위(px)
+ * @returns {Array<Array<number>>} tolerance 기준으로 묶인 그룹 배열
+ */
 function groupByProximity(sortedValues, tolerance) {
   const groups = [];
   let currentGroup = [sortedValues[0]];
@@ -36,9 +40,6 @@ function groupByProximity(sortedValues, tolerance) {
   return groups;
 }
 
-// 간격 배열의 평균값을 구한다 (gap 추론용).
-// 자식 레이어들이 서로 겹치면 개별 gap이 음수가 될 수 있는데, CSS의 gap 속성은 음수를
-// 허용하지 않아(선언 자체가 무시됨) 0으로 방어한다.
 function calculateAverageGap(gaps) {
   if (gaps.length === 0) return 0;
   const sum = gaps.reduce((acc, gap) => acc + gap, 0);
@@ -93,8 +94,6 @@ function detectColumn(rects, tolerance) {
   return { isColumn: true, gap: calculateAverageGap(gaps) };
 }
 
-// 모든 행에서 같은 순번(컬럼 인덱스)의 아이템끼리 x좌표가 tolerance 이내로 일치하는지 확인한다.
-// 행마다 아이템 개수만 같고 실제 컬럼 위치는 어긋난 비-그리드 레이아웃을 그리드로 오판하지 않기 위한 검증이다.
 function isColumnXAligned(rows, tolerance) {
   const [firstRow, ...restRows] = rows;
   return restRows.every((row) =>

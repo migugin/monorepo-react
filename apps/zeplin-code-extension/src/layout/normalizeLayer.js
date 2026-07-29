@@ -38,12 +38,15 @@ function resolveAssets(rawLayer, assetIndexBySourceId) {
   const url = sourceId ? assetIndexBySourceId.get(sourceId) : undefined;
   if (url) return [{ url }];
 
-  // 레이어 자체에 이미 assets가 붙어오는 경우(Extension SDK 등)를 위한 폴백
   return rawLayer.assets ?? [];
 }
 
-// text_styles[].style(REST API, snake_case) 또는 textStyles[].textStyle(SDK, camelCase) 중
-// 실제로 존재하는 쪽에서 대표 스타일 하나를 꺼낸다.
+/**
+ * text_styles[].style(REST API, snake_case) 또는 textStyles[].textStyle(SDK, camelCase) 중
+ * 실제로 존재하는 쪽에서 대표 스타일 하나를 꺼내 camelCase 필드로 평탄화한다.
+ * @param {object} rawLayer - 원본 Zeplin 레이어
+ * @returns {object|undefined} 정규화된 텍스트 스타일, 텍스트 스타일이 없으면 undefined
+ */
 function normalizeTextStyle(rawLayer) {
   const rawTextStyles = rawLayer.text_styles ?? rawLayer.textStyles;
   const entry = rawTextStyles?.[0];
@@ -66,7 +69,6 @@ function normalizeBorders(rawLayer) {
 
   return rawBorders.map((border) => ({
     thickness: border.thickness,
-    // 원본은 border.fill.color에 색이 감싸져 있다. 이미 평탄화된 입력(border.color)도 지원한다.
     color: border.fill?.color ?? border.color
   }));
 }

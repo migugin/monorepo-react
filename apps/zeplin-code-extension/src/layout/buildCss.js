@@ -1,4 +1,3 @@
-// camelCase 스타일 프로퍼티를 kebab-case CSS 프로퍼티로 변환한다
 function toKebabCase(propertyName) {
   return propertyName.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 }
@@ -14,11 +13,6 @@ function withUnit(propertyName, value) {
   return `${value}px`;
 }
 
-/**
- * Zeplin의 color 객체({r,g,b,a})를 CSS rgba() 문자열로 변환한다.
- * @param {{r:number,g:number,b:number,a:number}} color - Zeplin color 객체
- * @returns {string} rgba() CSS 문자열
- */
 export function colorToRgba(color) {
   if (!color) return "transparent";
   const alpha = color.a ?? 1;

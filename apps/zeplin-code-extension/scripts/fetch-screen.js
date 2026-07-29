@@ -21,7 +21,13 @@ function readRequiredEnv(key) {
   return value;
 }
 
-// 화면의 최신 버전(레이어 트리 포함)을 가져온다
+/**
+ * 화면의 최신 버전(레이어 트리 포함)을 Zeplin REST API에서 가져온다.
+ * @param {string} projectId - Zeplin 프로젝트 ID
+ * @param {string} screenId - Zeplin 화면 ID
+ * @param {string} accessToken - Zeplin Personal Access Token
+ * @returns {Promise<object>} 화면 최신 버전의 레이어 트리를 포함한 응답 JSON
+ */
 async function fetchLatestScreenVersion(projectId, screenId, accessToken) {
   const url = `${API_BASE_URL}/projects/${projectId}/screens/${screenId}/versions/latest`;
   const response = await fetch(url, {
@@ -42,6 +48,10 @@ async function fetchLatestScreenVersion(projectId, screenId, accessToken) {
   return response.json();
 }
 
+/**
+ * 필요한 환경변수를 읽어 화면의 최신 버전을 가져온 뒤 data/screen-<screenId>.json으로 저장한다.
+ * @returns {Promise<void>}
+ */
 async function main() {
   const accessToken = readRequiredEnv("ZEPLIN_ACCESS_TOKEN");
   const projectId = readRequiredEnv("ZEPLIN_PROJECT_ID");
