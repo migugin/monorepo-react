@@ -34,7 +34,7 @@ const SYSTEM_PROMPT_CHAT = `
   - 반드시 반말을 써줘. "~야", "~어", "~지", "~거든", "~했어", "~인 것 같아" 같은 자연스러운 반말 말투를 사용해
   - 가끔 "헤헤~", "으응~", "그렇구나~", "맞아맞아~" 같은 귀여운 추임새를 자연스럽게 넣어줘
   - 친한 친구에게 말하듯 다정하고 따뜻하게 대화해줘
-  - 이모지를 쓰지 마.
+  - 이모지를 필요하다고 생각할 때만 사용하고 일반적으로 대화할 때는 남발하지 마
   - 모든 답변은 반드시 한국어로 해줘
   - 절대로 존댓말(~요, ~니다, ~까요)은 쓰지 마
 `;
@@ -92,34 +92,50 @@ function saveLocalMemos(list) {
 }
 
 // ─── Gemini API ──────────────────────────────────────────
-const MODELS = ["gemini-3.8-flash", "gemini-1.5-flash"];
+const GEMINI_MODELS = [
+  { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash" },
+  { id: "gemini-3.7-flash", label: "Gemini 3.7 Flash" },
+  { id: "gemini-3.6-flash", label: "Gemini 3.6 Flash" },
+  { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash" },
+  { id: "gemini-3.5-flash-lite", label: "Gemini 3.5 Flash-Lite" },
+];
+const DEFAULT_MODEL_ID = GEMINI_MODELS[0].id;
+const SELECTED_MODEL_KEY = "gyupt-gemini-model";
 const RETRY_DELAYS_MS = [1000, 2500];
+
+function loadSelectedModel() {
+  const stored = localStorage.getItem(SELECTED_MODEL_KEY);
+  const found = GEMINI_MODELS.find((model) => model.id === stored);
+  if (found) return found.id;
+  return DEFAULT_MODEL_ID;
+}
 
 function buildApiUrl(model) {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   return `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${apiKey}`;
 }
 
-async function fetchGemini(body, signal) {
-  for (const model of MODELS) {
-    for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt++) {
-      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-      if (attempt > 0) await new Promise((r) => setTimeout(r, RETRY_DELAYS_MS[attempt - 1]));
-      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-      const response = await fetch(buildApiUrl(model), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal,
-      });
-      const result = await response.json();
-      if (response.status === 503 || result.error?.code === 503) {
-        if (attempt < RETRY_DELAYS_MS.length) continue;
-        break;
-      }
-      if (!response.ok || result.error) throw new Error(result.error?.message ?? `HTTP ${response.status}`);
-      return result;
-    }
+/** 선택한 Gemini 모델로 응답을 요청하고, 서버 혼잡(503)이면 같은 모델을 재시도한다. */
+async function fetchGemini(request) {
+  const model = request.model;
+  const body = request.body;
+  const signal = request.signal;
+  for (let attempt = 0; attempt <= RETRY_DELAYS_MS.length; attempt += 1) {
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt - 1]));
+    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    const response = await fetch(buildApiUrl(model), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    });
+    const result = await response.json();
+    const isBusy = response.status === 503 || result.error?.code === 503;
+    if (isBusy && attempt < RETRY_DELAYS_MS.length) continue;
+    if (isBusy) throw new Error("서버가 너무 바빠. 잠시 후 다시 시도해줘!");
+    if (!response.ok || result.error) throw new Error(result.error?.message ?? `HTTP ${response.status}`);
+    return result;
   }
   throw new Error("서버가 너무 바빠. 잠시 후 다시 시도해줘!");
 }
@@ -511,7 +527,7 @@ function BusyModal({ onStay, onLeave }) {
 }
 
 // ─── 통합 대화 창 ─────────────────────────────────────────
-function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, onAbortChange }) {
+function ConversationPane({ session, inputMode, selectedModel, onUpdateSession, onBusyChange, onAbortChange }) {
   const [chatInput, setChatInput] = useState("");
   const chatPlaceholder = useMemo(() => CHAT_PLACEHOLDERS[Math.floor(Math.random() * CHAT_PLACEHOLDERS.length)], []);
   const [urlInput, setUrlInput] = useState("");
@@ -565,13 +581,14 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
     onAbortChange?.(() => controller.abort());
 
     try {
-      const result = await fetchGemini(
-        {
+      const result = await fetchGemini({
+        model: selectedModel,
+        signal: controller.signal,
+        body: {
           system_instruction: { parts: [{ text: SYSTEM_PROMPT_CHAT }] },
           contents: [{ parts: [{ text: userItem.text }] }],
         },
-        controller.signal,
-      );
+      });
       const botText = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "으응... 잘 모르겠어";
       const botItem = { id: `${Date.now()}-b`, kind: "chat", sender: "bot", text: botText, createdAt: Date.now() };
       const final = [...baseItems, botItem];
@@ -631,13 +648,14 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
     onAbortChange?.(() => controller.abort());
 
     try {
-      const result = await fetchGemini(
-        {
+      const result = await fetchGemini({
+        model: selectedModel,
+        signal: controller.signal,
+        body: {
           system_instruction: { parts: [{ text: SYSTEM_PROMPT_CHAT }] },
           contents: [{ parts: [{ text: trimmed }] }],
         },
-        controller.signal,
-      );
+      });
       const botText = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "으응... 잘 모르겠어";
       const botItem = { id: `${Date.now()}-b`, kind: "chat", sender: "bot", text: botText, createdAt: Date.now() };
       const final = [...nextItems, botItem];
@@ -694,8 +712,10 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
     onAbortChange?.(() => controller.abort());
 
     try {
-      const result = await fetchGemini(
-        {
+      const result = await fetchGemini({
+        model: selectedModel,
+        signal: controller.signal,
+        body: {
           system_instruction: { parts: [{ text: SYSTEM_PROMPT_YOUTUBE }] },
           contents: [
             {
@@ -706,8 +726,7 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
             },
           ],
         },
-        controller.signal,
-      );
+      });
       const text =
         result.candidates?.[0]?.content?.parts?.[0]?.text ??
         `응답 파싱 실패\n\`\`\`\n${JSON.stringify(result, null, 2)}\n\`\`\``;
@@ -916,6 +935,7 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
 // ─── 앱 루트 ─────────────────────────────────────────────
 function App() {
   const [inputMode, setInputMode] = useState("chat");
+  const [selectedModel, setSelectedModel] = useState(loadSelectedModel);
   const [sessions, setSessions] = useState(() => {
     if (!FIREBASE_CONFIGURED) return loadLocalSessions().map(migrateSession);
     return [];
@@ -1014,6 +1034,12 @@ function App() {
     setSessions((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
   }
 
+  function onSelectModel(event) {
+    const nextModel = event.target.value;
+    setSelectedModel(nextModel);
+    localStorage.setItem(SELECTED_MODEL_KEY, nextModel);
+  }
+
   return (
     <div className="app-wrapper">
       <Sidebar
@@ -1026,23 +1052,39 @@ function App() {
 
       <div className="main-area">
         <header className="header">
-          <AvatarImage src="/images/hachiware.png" fallback="🐱" className="header-avatar" />
-          <div className="tab-buttons">
-            <button className={`tab-btn${inputMode === "chat" ? " active" : ""}`} onClick={() => setInputMode("chat")}>
-              대화/질문
-            </button>
-            <button
-              className={`tab-btn${inputMode === "youtube" ? " active" : ""}`}
-              onClick={() => setInputMode("youtube")}
-            >
-              유튜브 요약
-            </button>
+          <div className="header-left">
+            <AvatarImage src="/images/hachiware.png" fallback="🐱" className="header-avatar" />
+            <div className="tab-buttons">
+              <button
+                className={`tab-btn${inputMode === "chat" ? " active" : ""}`}
+                onClick={() => setInputMode("chat")}
+              >
+                대화/질문
+              </button>
+              <button
+                className={`tab-btn${inputMode === "youtube" ? " active" : ""}`}
+                onClick={() => setInputMode("youtube")}
+              >
+                유튜브 요약
+              </button>
+            </div>
           </div>
+          <label className="model-select">
+            <span className="model-select-label">모델</span>
+            <select value={selectedModel} onChange={onSelectModel} disabled={isBusy}>
+              {GEMINI_MODELS.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </header>
 
         <ConversationPane
           session={activeSession}
           inputMode={inputMode}
+          selectedModel={selectedModel}
           onUpdateSession={onUpdateSession}
           onBusyChange={onBusyChange}
           onAbortChange={onAbortChange}

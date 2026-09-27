@@ -319,6 +319,52 @@ hr {
   }
 }
 
+.model-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.model-select-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-sub);
+}
+
+.model-select select {
+  appearance: none;
+  border: 1px solid var(--color-border);
+  background-color: var(--bg-input-field);
+  color: var(--color-text);
+  border-radius: 8px;
+  padding: 6px 28px 6px 10px;
+  font-size: 13px;
+  font-family: "Noto Sans KR", sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-text-sub) 50%),
+    linear-gradient(135deg, var(--color-text-sub) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 9px) 50%;
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:focus {
+    outline: 2px solid rgba(91, 127, 232, 0.35);
+    outline-offset: 1px;
+  }
+}
+
 /* =============================================
    탭 콘텐츠 (공통 래퍼)
    ============================================= */
@@ -1030,6 +1076,7 @@ hr {
    메시지 액션 버튼
    ============================================= */
 .bubble-wrapper {
+  max-width: 66%;
   display: flex;
   flex-direction: column;
 }
