@@ -3,8 +3,10 @@ packages:
   - "packages/*"
 
 allowBuilds:
+  '@firebase/util': true
   '@parcel/watcher': false
   core-js: false
+  protobufjs: true
   unrs-resolver: false
 
 overrides:
