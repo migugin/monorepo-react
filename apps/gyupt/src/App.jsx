@@ -247,7 +247,7 @@ function DeleteModal({ label, onConfirm, onCancel }) {
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
         <p className="modal-title">{label}</p>
-        <p className="modal-desc">삭제된 내용은 복구할 수 없어.</p>
+        <p className="modal-desc">삭제한 내용은 복구할 수 없어</p>
         <div className="modal-actions">
           <button className="modal-btn cancel" onClick={onCancel}>
             취소
@@ -519,6 +519,7 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
   const [isLoading, setIsLoading] = useState(false);
   const [typingId, setTypingId] = useState(null);
   const [memoPosition, setMemoPosition] = useState("right");
+  const [deletingItemId, setDeletingItemId] = useState(null);
   const scrollRef = useRef(null);
 
   const items = useMemo(() => session?.items ?? [], [session]);
@@ -545,10 +546,12 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
   }
 
   // 메시지 삭제
-  function deleteItem(id) {
-    const updated = items.filter((it) => it.id !== id);
+  function onDeleteItemConfirm() {
+    if (!deletingItemId) return;
+    const updated = items.filter((it) => it.id !== deletingItemId);
     onUpdateSession(session.id, { items: updated });
     saveItems(updated);
+    setDeletingItemId(null);
   }
 
   // 중단된 질문 재전송
@@ -787,7 +790,7 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
                           </button>
                           <button
                             className="action-btn action-btn--delete"
-                            onClick={() => deleteItem(item.id)}
+                            onClick={() => setDeletingItemId(item.id)}
                             title="삭제"
                           >
                             <i className="fas fa-trash" />
@@ -898,6 +901,14 @@ function ConversationPane({ session, inputMode, onUpdateSession, onBusyChange, o
       </div>
 
       {memoPosition === "right" && <MemoPanel position="right" onTogglePosition={() => setMemoPosition("left")} />}
+
+      {deletingItemId && (
+        <DeleteModal
+          label="이 대화를 삭제할까?"
+          onConfirm={onDeleteItemConfirm}
+          onCancel={() => setDeletingItemId(null)}
+        />
+      )}
     </div>
   );
 }
